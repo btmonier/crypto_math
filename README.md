@@ -1,5 +1,3 @@
-# crypto_math
-
 Repo for holding answers to the programming exercises found in
 [Cryptological Mathematics](https://bookstore.ams.org/CLRM/16) by Robert Edward Lewand.
 
