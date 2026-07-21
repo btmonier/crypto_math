@@ -8,3 +8,4 @@ pub mod ex_1_2;
 pub mod ex_1_3;
 pub mod ex_1_4;
 pub mod ex_1_5;
+pub mod ex_1_6;
