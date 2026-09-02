@@ -4,3 +4,4 @@
 //! Each exercise lives in its own `ex_4_N` module.
 
 pub mod ex_4_1;
+pub mod ex_4_3;
