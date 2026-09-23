@@ -51,8 +51,29 @@
 //! (`M = 100 * a + b`). Positions are 1-based in the 94-character alphabet
 //! above, so `53` is a space, `01` is `a`, and `35` is `I`. A 47-block
 //! ciphertext therefore yields 94 characters.
+//!
+//! **Question 3** - Generate sizeable public and private keys.
+//!
+//! > As a trusted person, you have been contracted by a small clandestine
+//! > organization to generate a set of sizeable public and private keys.
+//! > Money is no object. They have agreed to pay you an amount proportional
+//! > to the size of `n`. Go for it.
+//!
+//! An RSA key starts from two distinct primes `p` and `q`. The public
+//! modulus is `n = p * q`, Euler's totient is `\phi(n) = (p - 1)(q - 1)`,
+//! the public exponent `e` is chosen coprime to `\phi(n)`, and the private
+//! exponent `d` is the inverse of `e` modulo `\phi(n)`. The public key is
+//! the pair `(n, e)`; the private key is `(n, d)` (with `p` and `q` kept
+//! alongside it).
+//!
+//! Because pay scales with `n`, [`generate_sizeable_key`] takes the largest
+//! pair of primes whose product still fits in a `u64`: the two primes just
+//! below `2^32`. The resulting `n` is a 20-digit integer, well above the
+//! 14-digit moduli of Questions 1 and 2. The enciphering exponent is the
+//! Fermat prime `65537`.
 
 use crypto_core::alphabet::{index_to_letter, letter_to_index, normalize};
+use crypto_core::primes::is_prime;
 
 /// Public modulus from Question 1.
 pub const N: u64 = 34_618_195_959_169;
@@ -318,6 +339,129 @@ pub fn encode_pair(pair: &str) -> u64 {
     a * RADIX + b
 }
 
+/// An RSA key: public pair `(n, e)`, private pair `(n, d)`, and the primes
+/// `p`, `q` that produced `n`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub struct RsaKey {
+    /// First prime factor of [`Self::n`].
+    pub p: u64,
+    /// Second prime factor of [`Self::n`].
+    pub q: u64,
+    /// Public modulus `p * q`.
+    pub n: u64,
+    /// Public enciphering exponent.
+    pub e: u64,
+    /// Private deciphering exponent, inverse of `e` modulo `\phi(n)`.
+    pub d: u64,
+}
+
+impl RsaKey {
+    /// Build a key from distinct primes `p`, `q` and a public exponent `e`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `p` or `q` is not prime, if `p == q`, if `n = p * q` or
+    /// `\phi(n)` overflow a `u64`, or if `gcd(e, φ(n)) != 1`.
+    pub fn from_primes(p: u64, q: u64, e: u64) -> Self {
+        assert!(is_prime(p), "p must be prime");
+        assert!(is_prime(q), "q must be prime");
+        assert!(p != q, "RSA primes must be distinct");
+        let n = p.checked_mul(q).expect("n = p * q must fit in a u64");
+        let phi = (p - 1)
+            .checked_mul(q - 1)
+            .expect("phi(n) must fit in a u64");
+        assert!(gcd_u64(e, phi) == 1, "e must be coprime to phi(n)");
+        let d = mod_inverse_u64(e, phi).expect("e is coprime to phi(n)");
+        Self { p, q, n, e, d }
+    }
+
+    /// Public key `(n, e)`.
+    pub fn public_key(&self) -> (u64, u64) {
+        (self.n, self.e)
+    }
+
+    /// Private key `(n, d)`.
+    pub fn private_key(&self) -> (u64, u64) {
+        (self.n, self.d)
+    }
+
+    /// Euler totient `\phi(n) = (p - 1)(q - 1)`.
+    pub fn phi(&self) -> u64 {
+        (self.p - 1) * (self.q - 1)
+    }
+
+    /// Encipher an integer `m` with `0 <= m < n`.
+    pub fn encipher_int(&self, m: u64) -> u64 {
+        assert!(m < self.n, "plaintext integer must be strictly less than n");
+        rsa_pow(m, self.e, self.n)
+    }
+
+    /// Decipher an integer that was produced by [`Self::encipher_int`].
+    pub fn decipher_int(&self, c: u64) -> u64 {
+        rsa_pow(c, self.d, self.n)
+    }
+}
+
+/// Largest RSA key whose modulus still fits in a `u64`.
+///
+/// Chooses the two primes immediately below `2^32` and the Fermat exponent
+/// `65537`. The resulting `n` has 20 decimal digits.
+pub fn generate_sizeable_key() -> RsaKey {
+    let p = prev_prime(1 << 32);
+    let q_limit = u64::MAX / p;
+    let q = {
+        let candidate = prev_prime(q_limit);
+        if candidate == p {
+            prev_prime(p - 1)
+        } else {
+            candidate
+        }
+    };
+    RsaKey::from_primes(p, q, 65_537)
+}
+
+/// Greatest odd prime `<= n`, or `2` when `n == 2`.
+fn prev_prime(n: u64) -> u64 {
+    assert!(n >= 2, "no prime is less than 2");
+    if n == 2 {
+        return 2;
+    }
+    let mut n = if n % 2 == 0 { n - 1 } else { n };
+    while !is_prime(n) {
+        n = n.saturating_sub(2);
+        assert!(n >= 2, "no prime is less than 2");
+    }
+    n
+}
+
+fn gcd_u64(mut a: u64, mut b: u64) -> u64 {
+    while b != 0 {
+        let r = a % b;
+        a = b;
+        b = r;
+    }
+    a
+}
+
+fn mod_inverse_u64(a: u64, m: u64) -> Option<u64> {
+    let (g, x, _) = extended_gcd_i128(i128::from(a), i128::from(m));
+    if g != 1 {
+        None
+    } else {
+        let m = i128::from(m);
+        Some((((x % m) + m) % m) as u64)
+    }
+}
+
+fn extended_gcd_i128(a: i128, b: i128) -> (i128, i128, i128) {
+    if b == 0 {
+        (a.abs(), if a < 0 { -1 } else { 1 }, 0)
+    } else {
+        let (g, x, y) = extended_gcd_i128(b, a % b);
+        (g, y, x - (a / b) * y)
+    }
+}
+
 /// Square-and-multiply: `base^exp mod n` for the textbook-sized RSA integers.
 fn rsa_pow(base: u64, exp: u64, n: u64) -> u64 {
     if n == 1 {
@@ -518,5 +662,77 @@ mod tests {
     #[should_panic(expected = "outside 1")]
     fn q2_zero_position_is_rejected() {
         let _ = index_to_char(0);
+    }
+
+    /// Largest `u64` key from [`generate_sizeable_key`].
+    const Q3_P: u64 = 4_294_967_291;
+    const Q3_Q: u64 = 4_294_967_279;
+    const Q3_N: u64 = 18_446_743_979_220_271_189;
+    const Q3_E: u64 = 65_537;
+    const Q3_D: u64 = 9_331_878_932_546_167_513;
+
+    #[test]
+    fn q3_tiny_key_matches_the_book_example() {
+        // p = 11, q = 13, n = 143, \phi(n) = 120, e = 7, d = 103.
+        let key = RsaKey::from_primes(11, 13, 7);
+        assert_eq!(key.n, 143);
+        assert_eq!(key.phi(), 120);
+        assert_eq!(key.public_key(), (143, 7));
+        assert_eq!(key.private_key(), (143, 103));
+        assert_eq!(key.encipher_int(42), rsa_pow(42, 7, 143));
+        assert_eq!(key.decipher_int(key.encipher_int(42)), 42);
+    }
+
+    #[test]
+    fn q3_sizeable_key_is_the_largest_u64_pair() {
+        let key = generate_sizeable_key();
+        assert_eq!(
+            key,
+            RsaKey {
+                p: Q3_P,
+                q: Q3_Q,
+                n: Q3_N,
+                e: Q3_E,
+                d: Q3_D,
+            }
+        );
+        assert!(is_prime(key.p));
+        assert!(is_prime(key.q));
+        assert_ne!(key.p, key.q);
+        assert_eq!(key.n, key.p * key.q);
+        assert!(key.n > N && key.n > Q2_N);
+        assert_eq!(
+            (u128::from(key.e) * u128::from(key.d)) % u128::from(key.phi()),
+            1
+        );
+        assert_eq!(key.decipher_int(key.encipher_int(42)), 42);
+    }
+
+    #[test]
+    fn q3_sizeable_key_roundtrips_the_question1_riddle() {
+        let key = generate_sizeable_key();
+        let cipher = encipher(BOOK_MESSAGE, key.n, key.e);
+        assert_eq!(
+            decipher(&cipher, key.n, key.d),
+            prepare_blocks(BOOK_MESSAGE).concat()
+        );
+    }
+
+    #[test]
+    #[should_panic(expected = "must be prime")]
+    fn q3_composite_prime_is_rejected() {
+        let _ = RsaKey::from_primes(9, 13, 7);
+    }
+
+    #[test]
+    #[should_panic(expected = "must be distinct")]
+    fn q3_repeated_prime_is_rejected() {
+        let _ = RsaKey::from_primes(11, 11, 7);
+    }
+
+    #[test]
+    #[should_panic(expected = "coprime")]
+    fn q3_even_exponent_is_rejected() {
+        let _ = RsaKey::from_primes(11, 13, 2);
     }
 }
