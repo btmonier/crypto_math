@@ -123,7 +123,9 @@ mod tests {
     #[test]
     fn letter_table_empty_message_is_all_zero() {
         let table = letter_frequency_table("12345 !?");
-        assert!(table.iter().all(|&(_, count, freq)| count == 0 && freq == 0.0));
+        assert!(table
+            .iter()
+            .all(|&(_, count, freq)| count == 0 && freq == 0.0));
     }
 
     #[test]

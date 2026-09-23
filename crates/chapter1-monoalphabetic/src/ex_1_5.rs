@@ -221,10 +221,7 @@ mod tests {
     #[test]
     fn keyword_is_case_insensitive_and_ignores_non_letters() {
         assert_eq!(cipher_alphabet("kryptos"), cipher_alphabet("KRYPTOS"));
-        assert_eq!(
-            cipher_alphabet("Zebra-Skin"),
-            cipher_alphabet("ZEBRASKIN")
-        );
+        assert_eq!(cipher_alphabet("Zebra-Skin"), cipher_alphabet("ZEBRASKIN"));
     }
 
     // --- Question 2: affine cipher ---

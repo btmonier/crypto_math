@@ -58,32 +58,32 @@ pub use crypto_core::frequency::index_of_coincidence;
 ///
 /// Every integer in `0..=99` appears in exactly one subset.
 const LETTER_NUMBERS: [&[u8]; 26] = [
-    &[15, 33, 37, 55, 57, 72, 91, 96],       // A
-    &[24],                                   // B
-    &[3, 39, 67],                            // C
-    &[4, 43, 61, 88],                        // D
+    &[15, 33, 37, 55, 57, 72, 91, 96],                    // A
+    &[24],                                                // B
+    &[3, 39, 67],                                         // C
+    &[4, 43, 61, 88],                                     // D
     &[8, 12, 20, 46, 47, 59, 64, 79, 81, 85, 90, 94, 97], // E
-    &[40, 48],                               // F
-    &[29, 53],                               // G
-    &[5, 16, 30, 42, 69, 99],                // H
-    &[14, 45, 50, 60, 73, 82, 93],           // I
-    &[11],                                   // J
-    &[77],                                   // K
-    &[1, 26, 71, 98],                        // L
-    &[34, 87],                               // M
-    &[6, 17, 22, 31, 49, 58],                // N
-    &[2, 10, 41, 51, 66, 75, 83],            // O
-    &[13, 18],                               // P
-    &[36],                                   // Q
-    &[21, 25, 65, 68, 92, 95],               // R
-    &[0, 28, 52, 63, 74, 78],                // S
-    &[7, 19, 23, 35, 38, 54, 70, 84, 89],    // T
-    &[9, 32],                                // U
-    &[44],                                   // V
-    &[56, 80],                               // W
-    &[86],                                   // X
-    &[62, 76],                               // Y
-    &[27],                                   // Z
+    &[40, 48],                                            // F
+    &[29, 53],                                            // G
+    &[5, 16, 30, 42, 69, 99],                             // H
+    &[14, 45, 50, 60, 73, 82, 93],                        // I
+    &[11],                                                // J
+    &[77],                                                // K
+    &[1, 26, 71, 98],                                     // L
+    &[34, 87],                                            // M
+    &[6, 17, 22, 31, 49, 58],                             // N
+    &[2, 10, 41, 51, 66, 75, 83],                         // O
+    &[13, 18],                                            // P
+    &[36],                                                // Q
+    &[21, 25, 65, 68, 92, 95],                            // R
+    &[0, 28, 52, 63, 74, 78],                             // S
+    &[7, 19, 23, 35, 38, 54, 70, 84, 89],                 // T
+    &[9, 32],                                             // U
+    &[44],                                                // V
+    &[56, 80],                                            // W
+    &[86],                                                // X
+    &[62, 76],                                            // Y
+    &[27],                                                // Z
 ];
 
 /// Build the inverse map from two-digit code (`0..=99`) to plaintext letter.
@@ -257,10 +257,7 @@ pub fn format_ngraph_report(text: &str) -> String {
 /// then there is no row of the Vigenere square to consult.
 fn key_stream(keyword: &str) -> Vec<u8> {
     let keys = to_indices(keyword);
-    assert!(
-        !keys.is_empty(),
-        "keyword must contain at least one letter"
-    );
+    assert!(!keys.is_empty(), "keyword must contain at least one letter");
     keys
 }
 
@@ -473,14 +470,8 @@ mod tests {
     #[test]
     fn vigenere_classic_lemon_example() {
         // Classic textbook / Wikipedia example.
-        assert_eq!(
-            vigenere_encipher("ATTACKATDAWN", "LEMON"),
-            "LXFOPVEFRNHR"
-        );
-        assert_eq!(
-            vigenere_decipher("LXFOPVEFRNHR", "LEMON"),
-            "ATTACKATDAWN"
-        );
+        assert_eq!(vigenere_encipher("ATTACKATDAWN", "LEMON"), "LXFOPVEFRNHR");
+        assert_eq!(vigenere_decipher("LXFOPVEFRNHR", "LEMON"), "ATTACKATDAWN");
     }
 
     #[test]

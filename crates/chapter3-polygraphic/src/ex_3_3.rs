@@ -205,7 +205,10 @@ mod tests {
     fn inverse_of_help_key() {
         // 9^{-1} ≡ 3 (mod 26), so K^{-1} = 3 * [[5, -3], [-2, 3]] = [[15, 17], [20, 9]].
         assert_eq!(inverse_key(HELP_KEY), Ok([[15, 17], [20, 9]]));
-        assert_eq!(mul_keys(HELP_KEY, inverse_key(HELP_KEY).unwrap()), [[1, 0], [0, 1]]);
+        assert_eq!(
+            mul_keys(HELP_KEY, inverse_key(HELP_KEY).unwrap()),
+            [[1, 0], [0, 1]]
+        );
     }
 
     #[test]
@@ -269,11 +272,7 @@ mod tests {
         ];
         for key in keys {
             let cipher = encipher(plaintext, key).unwrap();
-            assert_eq!(
-                decipher(&cipher, key).unwrap(),
-                plaintext,
-                "key = {key:?}"
-            );
+            assert_eq!(decipher(&cipher, key).unwrap(), plaintext, "key = {key:?}");
         }
     }
 }

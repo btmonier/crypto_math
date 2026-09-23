@@ -116,9 +116,15 @@ impl Square {
         let (r1, c1) = self.locate(a);
         let (r2, c2) = self.locate(b);
         if r1 == r2 {
-            [self.at(r1, wrap(c1, col_delta)), self.at(r2, wrap(c2, col_delta))]
+            [
+                self.at(r1, wrap(c1, col_delta)),
+                self.at(r2, wrap(c2, col_delta)),
+            ]
         } else if c1 == c2 {
-            [self.at(wrap(r1, row_delta), c1), self.at(wrap(r2, row_delta), c2)]
+            [
+                self.at(wrap(r1, row_delta), c1),
+                self.at(wrap(r2, row_delta), c2),
+            ]
         } else {
             [self.at(r1, c2), self.at(r2, c1)]
         }
@@ -219,10 +225,7 @@ mod tests {
 
     #[test]
     fn square_from_monarchy() {
-        assert_eq!(
-            flatten(key_square("MONARCHY")),
-            "MONARCHYBDEFGIKLPQSTUVWXZ"
-        );
+        assert_eq!(flatten(key_square("MONARCHY")), "MONARCHYBDEFGIKLPQSTUVWXZ");
     }
 
     #[test]
@@ -244,20 +247,27 @@ mod tests {
 
     #[test]
     fn empty_keyword_is_the_alphabet_without_j() {
-        assert_eq!(
-            flatten(key_square("")),
-            "ABCDEFGHIKLMNOPQRSTUVWXYZ"
-        );
+        assert_eq!(flatten(key_square("")), "ABCDEFGHIKLMNOPQRSTUVWXYZ");
     }
 
     #[test]
     fn prepare_digraphs_inserts_filler_and_pads() {
-        assert_eq!(prepare_digraphs("HELLO"), vec![['H', 'E'], ['L', 'X'], ['L', 'O']]);
+        assert_eq!(
+            prepare_digraphs("HELLO"),
+            vec![['H', 'E'], ['L', 'X'], ['L', 'O']]
+        );
         assert_eq!(prepare_digraphs("X"), vec![['X', 'Q']]);
         assert_eq!(prepare_digraphs("XX"), vec![['X', 'Q'], ['X', 'Q']]);
         assert_eq!(
             prepare_digraphs("Hide the gold!"),
-            vec![['H', 'I'], ['D', 'E'], ['T', 'H'], ['E', 'G'], ['O', 'L'], ['D', 'X']]
+            vec![
+                ['H', 'I'],
+                ['D', 'E'],
+                ['T', 'H'],
+                ['E', 'G'],
+                ['O', 'L'],
+                ['D', 'X']
+            ]
         );
     }
 
@@ -293,11 +303,7 @@ mod tests {
         let plaintext = "THEQUICKBROWNFOX";
         for keyword in ["MONARCHY", "PLAYFAIR", "CRYPTOLOGY", "JULIUS"] {
             let cipher = encipher(plaintext, keyword);
-            assert_eq!(
-                decipher(&cipher, keyword),
-                plaintext,
-                "keyword = {keyword}"
-            );
+            assert_eq!(decipher(&cipher, keyword), plaintext, "keyword = {keyword}");
         }
     }
 

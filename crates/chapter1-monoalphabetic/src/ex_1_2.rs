@@ -119,7 +119,13 @@ mod tests {
             (0, 7, 0, 0),
         ];
         for (a, b, q, r) in cases {
-            assert_eq!(divide(a, b), Division { quotient: q, remainder: r });
+            assert_eq!(
+                divide(a, b),
+                Division {
+                    quotient: q,
+                    remainder: r
+                }
+            );
         }
     }
 
@@ -130,7 +136,10 @@ mod tests {
                 if b == 0 {
                     continue;
                 }
-                let Division { quotient, remainder } = divide(a, b);
+                let Division {
+                    quotient,
+                    remainder,
+                } = divide(a, b);
                 // a == b * q + r
                 assert_eq!(a, b * quotient + remainder);
                 // 0 <= r < |b|

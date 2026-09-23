@@ -136,7 +136,10 @@ mod tests {
         // C(n, r) * r! == P(n, r)
         for n in 0..=12 {
             for r in 0..=n {
-                assert_eq!(combinations(n, r) * factorial_iterative(r), permutations(n, r));
+                assert_eq!(
+                    combinations(n, r) * factorial_iterative(r),
+                    permutations(n, r)
+                );
             }
         }
     }

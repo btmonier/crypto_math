@@ -58,9 +58,7 @@ mod tests {
 
     /// Direct count from the definition: #{ k in 1..=n : gcd(k, n) == 1 }.
     fn phi_by_definition(n: u64) -> u64 {
-        (1..=n)
-            .filter(|&k| gcd(k as i64, n as i64) == 1)
-            .count() as u64
+        (1..=n).filter(|&k| gcd(k as i64, n as i64) == 1).count() as u64
     }
 
     #[test]
@@ -114,7 +112,7 @@ mod tests {
     #[test]
     fn matches_definition_over_range() {
         for n in 1..=200 {
-            assert_eq!(phi(n), phi_by_definition(n), "\phi({n})");
+            assert_eq!(phi(n), phi_by_definition(n), r"\phi({n})");
         }
     }
 
